@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-import argparse
 import logging
 import os
 import sys
@@ -57,7 +56,7 @@ def _setup_base_dir(framework, version):
 
     Returns
     -------
-    Path
+    Path: pathlib.PosixPath
         Complete path to the root testing directory.
     """
     framework_path = Path(os.getcwd()) / framework
@@ -164,7 +163,7 @@ def _generate_notebooks(enum_source, current_path):
     ----------
     enum_source: list(str)
         List containing all notebook names to generate.
-    current_path: str
+    current_path: pathlib.PosixPath
         Complete current path.
     """
     for item in enum_source:
@@ -216,7 +215,7 @@ def _level_in(current_path, new_title):
 
     Parameters
     ----------
-    current_path: str
+    current_path: pathlib.PosixPath
         Current absolute path.
     new_title: str
         Title of the new path.
@@ -240,7 +239,7 @@ def _level_out(current_path):
 
     Parameters
     ----------
-    current_path: str
+    current_path: pathlib.PosixPath
         Current absolute path.
 
     Returns
@@ -248,7 +247,7 @@ def _level_out(current_path):
     str
         Next absolute path.
     """
-    return current_path / '..'  # level back
+    return current_path.parents[0]  # level back
 
 
 def create(framework_name, framework_version, test_schema):
@@ -273,28 +272,3 @@ def create(framework_name, framework_version, test_schema):
 
     schema = _load_schema(test_schema)
     _create_scaffolding(framework_name, framework_version, schema['cells'])
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(prog='Create new testing scaffolding')
-    parser.add_argument("-n", '--name',
-                        required=True,
-                        help='Name of the new framework to tests.')
-
-    parser.add_argument("-v", '--version',
-                        required=True,
-                        help='Version of the framework to tests.')
-
-    parser.add_argument("-i", '--input',
-                        default='HOW_TO.ipynb',
-                        required=False,
-                        help='Directory where test schema is placed')
-
-    args = parser.parse_args(sys.argv[1:])
-
-    test_schema = os.path.abspath(args.input)
-    framework_version = args.version
-    framework_name = args.name
-
-    create(framework_name, framework_version, test_schema)

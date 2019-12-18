@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-import argparse
 import re
 import os
 import json
@@ -39,7 +38,7 @@ def _explore_scaffolding(path, scaffold, level=0):
 
     Parameters
     ----------
-    path: Path
+    path: pathlib.PosixPath
         Absolute path to explore.
     scaffold: dict
         Currently explored scaffold.
@@ -51,7 +50,7 @@ def _explore_scaffolding(path, scaffold, level=0):
     dict
         Explored scaffold.
     """
-    if os.path.isdir(str(path)):
+    if path.stem[0] != '.' and path.is_dir():
         if path not in scaffold['dirs']:
             scaffold['dirs'][path] = {'dirs': {}, 'files': {}}
 
@@ -60,7 +59,7 @@ def _explore_scaffolding(path, scaffold, level=0):
 
         [_explore_scaffolding(path / x, scaffold['dirs'][path], level + 1)
          for x in os.listdir(str(path))]
-    elif path.suffix == 'ipynb':
+    elif path.suffix == '.ipynb':
         logger.debug('Add report %s' % path)
         _add_report(path.name, _execute_test(str(path)), REPORTING_COLORS[-1])
 
@@ -318,22 +317,5 @@ def generate_summary(framework_name, framework_version):
         )))
 
     logger.info("Summary report generated successfully at %s" % reporting_path)
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(prog='Execute some framework tests')
-    parser.add_argument("-n", '--name',
-                        required=True,
-                        help='Name of the new framework to tests.')
-
-    parser.add_argument("-v", '--version',
-                        required=True,
-                        help='Version of the framework to tests.')
-
-    args = parser.parse_args(sys.argv[1:])
-
-    f_name = args.name
-    f_version = args.version
-
-    generate_summary(f_name, f_version)
+    # Once the summary is generated, item list can be reseted
+    REPORTING_ITEMS.clear()

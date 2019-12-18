@@ -35,5 +35,12 @@ setuptools.setup(
     ],
     python_requires='>=3.5',
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=test_requirements,
+    entry_points='''
+        [console_scripts]
+        nb2report=nb2report.nb2report:cli
+    ''',
+    install_requires = [
+        'Click',
+    ]
 )

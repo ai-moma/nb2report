@@ -2,3 +2,4 @@ ipython==7.5.0
 ipython-genutils==0.2.0
 Jinja2==2.10.3
 numpy==1.17.4 # https://github.com/ipython/ipykernel/issues/397
+click==7.0
