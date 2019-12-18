@@ -215,13 +215,3 @@ pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/python,pycharm,virtualenv
 .idea/
-
-# MacOs
-.DS_Store
-
-# Vscode
-.vscode/
-
-# Temporal folders
-coverage-reports/
-tmp/

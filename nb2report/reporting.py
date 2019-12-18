@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+import argparse
 import re
 import os
 import json
@@ -15,7 +16,7 @@ from IPython.testing.globalipapp import get_ipython
 from IPython.utils.io import capture_output
 
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)  # ToDo: INFO
 logger = logging.getLogger('nb2report')
 
 IPYTHON_INTERPRETER = None
@@ -38,7 +39,7 @@ def _explore_scaffolding(path, scaffold, level=0):
 
     Parameters
     ----------
-    path: pathlib.PosixPath
+    path: str
         Absolute path to explore.
     scaffold: dict
         Currently explored scaffold.
@@ -50,7 +51,7 @@ def _explore_scaffolding(path, scaffold, level=0):
     dict
         Explored scaffold.
     """
-    if path.stem[0] != '.' and path.is_dir():
+    if os.path.isdir(path):
         if path not in scaffold['dirs']:
             scaffold['dirs'][path] = {'dirs': {}, 'files': {}}
 
@@ -58,10 +59,10 @@ def _explore_scaffolding(path, scaffold, level=0):
                 _add_report(path.name, '', REPORTING_COLORS[level])
 
         [_explore_scaffolding(path / x, scaffold['dirs'][path], level + 1)
-         for x in os.listdir(str(path))]
-    elif path.suffix == '.ipynb':
+         for x in os.listdir(path)]
+    elif Path(path).suffix == 'ipynb':
         logger.debug('Add report %s' % path)
-        _add_report(path.name, _execute_test(str(path)), REPORTING_COLORS[-1])
+        _add_report(path.name, _execute_test(path), REPORTING_COLORS[-1])
 
     return scaffold
 
@@ -295,7 +296,7 @@ def generate_summary(framework_name, framework_version):
     framework_version: str
         Framework version.
     """
-    test_root_path = Path(os.getcwd()) / framework_name / framework_version
+    test_root_path = BASE_DIR / framework_name / framework_version
     reporting_path = test_root_path / REPORTING_FILE_NAME
 
     _explore_scaffolding(
@@ -307,7 +308,7 @@ def generate_summary(framework_name, framework_version):
     env = jinja2.Environment(loader=loader)
     template = env.get_template('')
 
-    with open(str(reporting_path), 'w') as f:
+    with open(reporting_path, 'w') as f:
         f.writelines(template.render(dict(
             title='Test summary for {} {}'.format(
                 framework_name,
@@ -317,5 +318,22 @@ def generate_summary(framework_name, framework_version):
         )))
 
     logger.info("Summary report generated successfully at %s" % reporting_path)
-    # Once the summary is generated, item list can be reseted
-    REPORTING_ITEMS.clear()
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(prog='Execute some framework tests')
+    parser.add_argument("-n", '--name',
+                        required=True,
+                        help='Name of the new framework to tests.')
+
+    parser.add_argument("-v", '--version',
+                        required=True,
+                        help='Version of the framework to tests.')
+
+    args = parser.parse_args(sys.argv[1:])
+
+    f_name = args.name
+    f_version = args.version
+
+    generate_summary(f_name, f_version)
