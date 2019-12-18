@@ -155,7 +155,7 @@ def _clean_output(s):
     str
         Cleaned cell execution output.
     """
-    return re.sub(r'[a-zA-Z]+\[[0-9]+\]: +', '', s).replace('\n', '').strip()
+    return re.sub(r'.*[a-zA-Z]+\[[0-9]+\]: +', '', s).replace('\n', '').strip()
 
 
 def _get_interpreter():
@@ -211,12 +211,24 @@ def _evaluate_output(output):
     bool
         Casted output.
     """
+    logger.debug("Evaluating output: %s" % output)
+    # filter ansi characters
+    ansi_escape = re.compile(r'''
+                \x1B    # ESC
+                [@-_]   # 7-bit C1 Fe
+                [0-?]*  # Parameter bytes
+                [ -/]*  # Intermediate bytes
+                [@-~]   # Final byte
+            ''', re.VERBOSE)
+    output_utf = ansi_escape.sub('', output)
+    logger.debug("Filtered output: '%s'" % output_utf)
     try:
-        return eval(output.lower().capitalize())
+        return eval(output_utf.strip().lower().capitalize())
     except Exception as ex:
         logger.error(
-            'Received string %s is not a binary output. Please check all '
-            'assert cells return True or False' % output
+            "Received string '{}' (lenght: {}) is not a binary output. Please "
+            "check all assert cells return True or False"
+            .format(output_utf, len(output_utf))
         )
         raise ex
 
@@ -272,7 +284,9 @@ def _execute_test(f):
             if is_code(test_cell):
                 code = get_code(test_cell)
                 logger.debug('Executing code:\n%s' % code)
-                test_results.append(_evaluate_output(_run_cell(code)))
+                res = _evaluate_output(_run_cell(code))
+                logger.debug('Result:\n%s' % res)
+                test_results.append(res)
 
     except Exception as ex:
         logger.error('Error executing notebook %s' % f)
@@ -281,7 +295,7 @@ def _execute_test(f):
     return _evaluate_results(test_results)
 
 
-def generate_summary(framework_name, framework_version):
+def generate_summary(framework_name, framework_version, debug_mode=False):
     """ Generate summary report for given framework and version.
 
     The report file will be generated at:
@@ -294,12 +308,17 @@ def generate_summary(framework_name, framework_version):
         Framework name.
     framework_version: str
         Framework version.
+    debug_mode: bool
+        Whether debug mode is activated or not. Default to False.
     """
-    test_root_path = Path(os.getcwd()) / framework_name / framework_version
-    reporting_path = test_root_path / REPORTING_FILE_NAME
+    if debug_mode:
+        logger.setLevel(logging.DEBUG)
+
+    root_path = Path(os.getcwd()) / framework_name / framework_version
+    reporting_path = root_path / REPORTING_FILE_NAME
 
     _explore_scaffolding(
-        test_root_path,
+        root_path,
         scaffold={'dirs': {}, 'files': {}}
     )
 

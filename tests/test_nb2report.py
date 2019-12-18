@@ -3,7 +3,7 @@ import shutil
 
 
 from click.testing import CliRunner
-from nb2report import nb2report
+from nb2report import *
 
 # Environment variables
 SHORT_SCAFFOLDING = os.getenv('SHORT_SCAFFOLDING')
@@ -18,7 +18,7 @@ REPORTING = ['-n', f'{TMP_DIR}/tmptest', '-v', '.']
 def test_create_scaffolding():
 
     runner = CliRunner()
-    result = runner.invoke(nb2report.create_scaffolding, SCAFFOLDING)
+    result = runner.invoke(create_scaffolding, SCAFFOLDING)
 
     assert os.path.isdir(f'{TMP_DIR}/tmptest')
     assert result.exit_code == 0
@@ -27,8 +27,8 @@ def test_create_scaffolding():
 def test_create_report():
 
     runner = CliRunner()
-    result = runner.invoke(nb2report.create_report, REPORTING)
+    result = runner.invoke(create_report, REPORTING)
 
     assert result.exit_code == 0
-    assert os.path.isfile(f'{TMP_DIR}/tmptest/{nb2report.reporting.REPORTING_FILE_NAME}')
+    assert os.path.isfile(f'{TMP_DIR}/tmptest/{reporting.REPORTING_FILE_NAME}')
     shutil.rmtree(f'{TMP_DIR}/tmptest')

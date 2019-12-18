@@ -62,11 +62,8 @@ def _setup_base_dir(framework, version):
     framework_path = Path(os.getcwd()) / framework
     current_path = framework_path / version
 
-    if not framework_path.exists():
-        framework_path.mkdir()
-
-    if not current_path.exists():
-        current_path.mkdir()
+    framework_path.mkdir(exist_ok=True)
+    current_path.mkdir(exist_ok=True)
 
     return current_path
 

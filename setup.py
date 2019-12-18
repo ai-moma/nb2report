@@ -18,7 +18,7 @@ test_requirements = [str(ir.req) for ir in parse_requirements('requirements_test
 
 setuptools.setup(
     name="nb2report",
-    version="0.0.4",
+    version="0.0.5",
     author="Boris Fajardo",
     author_email="bfajardo@datiobd.com",
     description="Convert a markdown jupyter notebook into an html report.",
@@ -36,6 +36,6 @@ setuptools.setup(
     python_requires='>=3.5',
     test_suite='tests',
     tests_require=test_requirements,
-    entry_points={'console_scripts': ["nb2report=nb2report.cli:cli"]},
+    entry_points={'console_scripts': ["nb2report=nb2report:cli"]},
     install_requires=['Click']
 )
