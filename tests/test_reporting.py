@@ -6,16 +6,16 @@ from nb2report import reporting
 
 
 # Setup and environment asserts
-BASE_DIR = Path(os.environ['BASE_DIR'])
+TESTS_DIR = Path(os.environ['TESTS_DIR'])
 TMP_DIR = Path(os.environ['TMP_DIR'])
 RESOURCES_DIR = Path(os.environ['RESOURCES_DIR'])
 EMPTY_NOTEBOOK = Path(os.environ['EMPTY_NOTEBOOK'])
 DUMMY_ASSERT_TRUE = Path(os.environ['DUMMY_ASSERT_TRUE'])
 DUMMY_ASSERT_FALSE = Path(os.environ['DUMMY_ASSERT_FALSE'])
 
-if not BASE_DIR.exists() or not BASE_DIR.is_dir():
+if not TESTS_DIR.exists() or not TESTS_DIR.is_dir():
     raise FileNotFoundError('BASE_DIR has not been correctly initialized. '
-                            'Current value: %s' % BASE_DIR)
+                            'Current value: %s' % TESTS_DIR)
 
 if not TMP_DIR.exists() or not TMP_DIR.is_dir():
     raise FileNotFoundError('TMP_DIR has not been correctly initialized. '
@@ -156,8 +156,7 @@ def test__execute_test():
 
 
 def test_generate_summary():
-    reporting.BASE_DIR = BASE_DIR
-    framework_fake_name = 'tmp'
+    framework_fake_name = TMP_DIR
     framework_fake_version = '.'
 
     summary_path = TMP_DIR / reporting.REPORTING_FILE_NAME

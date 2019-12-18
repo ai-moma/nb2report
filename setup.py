@@ -18,14 +18,16 @@ test_requirements = [str(ir.req) for ir in parse_requirements('requirements_test
 
 setuptools.setup(
     name="nb2report",
-    version="0.0.1",
+    version="0.0.4",
     author="Boris Fajardo",
     author_email="bfajardo@datiobd.com",
     description="Convert a markdown jupyter notebook into an html report.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/ai-moma/nb2report",
     packages=setuptools.find_packages(exclude=("tests",)),
+    package_data={'nb2report': ['.config/*']},
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -33,5 +35,7 @@ setuptools.setup(
     ],
     python_requires='>=3.5',
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=test_requirements,
+    entry_points={'console_scripts': ["nb2report=nb2report.cli:cli"]},
+    install_requires=['Click']
 )

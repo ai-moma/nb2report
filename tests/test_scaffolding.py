@@ -6,12 +6,12 @@ from nb2report import scaffolding
 
 
 # Setup and environment asserts
-BASE_DIR = Path(os.environ['BASE_DIR'])
+TESTS_DIR = Path(os.environ['TESTS_DIR'])
 TMP_DIR = Path(os.environ['TMP_DIR'])
 RESOURCES_DIR = Path(os.environ['RESOURCES_DIR'])
 SCHEMA_FILE = Path(os.environ['SCHEMA_FILE'])
 
-if not BASE_DIR.exists() or not BASE_DIR.is_dir():
+if not TESTS_DIR.exists() or not TESTS_DIR.is_dir():
     raise FileNotFoundError('BASE_DIR has not been correctly initialized. '
                             'Current value: %s' % SCHEMA_FILE)
 
@@ -34,16 +34,14 @@ def test__load_schema():
 
 
 def test__setup_base_dir():
-    scaffolding.BASE_DIR = BASE_DIR
-    framework_fake_name = 'tmp'
-    framework_fake_version = 'test'
+    framework_name = 'tests/tmp'
+    framework_version = 'test'
 
-    scaffolding._setup_base_dir(framework_fake_name, framework_fake_version)
+    scaffolding._setup_base_dir(framework_name, framework_version)
 
-    assert BASE_DIR\
-        .joinpath(framework_fake_name)\
-        .joinpath(framework_fake_version)\
-        .exists()
+    resulting_path = Path(os.getcwd()) / framework_name / framework_version
+
+    assert resulting_path.exists()
 
 
 def test__walk_path_test():
@@ -89,8 +87,7 @@ def test__generate_notebooks():
 
 
 def test__create_scaffolding():
-    scaffolding.BASE_DIR = BASE_DIR
-    framework_fake_name = 'tmp'
+    framework_fake_name = 'tests/tmp'
     framework_fake_version = 'test'
 
     cells = [
@@ -122,7 +119,7 @@ def test__create_scaffolding():
 
     scaffolding._create_scaffolding(framework_fake_name, framework_fake_version, cells)
 
-    root_dir = BASE_DIR / framework_fake_name / framework_fake_version
+    root_dir = Path(os.getcwd()) / framework_fake_name / framework_fake_version
     dir1 = root_dir.joinpath('Estructuras_de_datos')
     dir2 = dir1.joinpath("Que_estructuras_de_datos_maneja")
 
@@ -145,12 +142,11 @@ def test__level_in():
 
 
 def test__level_out():
-    assert Path(scaffolding._level_out(BASE_DIR / 'tmp')).resolve() == BASE_DIR
+    assert Path(scaffolding._level_out(TESTS_DIR / 'tmp')).resolve() == TESTS_DIR
 
 
 def test_create():
-    scaffolding.BASE_DIR = BASE_DIR
-    framework_fake_name = 'tmp'
+    framework_fake_name = 'tests/tmp'
     framework_fake_version = 'test'
 
     scaffolding.create(framework_fake_name, framework_fake_version, SCHEMA_FILE)
