@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-import re
 import os
-import json
 import sys
 import logging
 import jinja2
+import nbformat
+from nbconvert.preprocessors import ExecutePreprocessor
 
 from pathlib import Path
-from nb2report.cell_utils import is_assert, is_markdown, is_code, get_code
-
-from IPython.testing.globalipapp import get_ipython
-from IPython.utils.io import capture_output
+from nb2report.cell_utils import is_assert, is_markdown, is_code, get_output
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -92,7 +89,7 @@ def _add_report(title, result, color):
 
 
 def _load_notebook(f):
-    """ Load the ipython notebook as a dict.
+    """ Load the ipython notebook as a notebook node.
 
     Parameters
     ----------
@@ -101,11 +98,11 @@ def _load_notebook(f):
 
     Returns
     -------
-    dict
-        json string representing the notebook file.
+    NotebookNode
+        A json-like object representing the notebook file.
     """
-    with open(f, 'r') as json_file:
-        notebook = json.load(json_file)
+    with open(f) as nb:
+        notebook = nbformat.read(nb, as_version=4)
 
     return notebook
 
@@ -137,65 +134,6 @@ def _get_assert_cell_index(cells):
     return asserts_cell[0][0]
 
 
-def _clean_output(s):
-    """ Clean the cell execution output.
-
-    Executed cells will return some string like "Out[1]: True"
-
-    >>> _clean_output("Out[1]: True")
-    True
-
-    Parameters
-    ----------
-    s: str
-        Cell execution output.
-
-    Returns
-    -------
-    str
-        Cleaned cell execution output.
-    """
-    return re.sub(r'.*[a-zA-Z]+\[[0-9]+\]: +', '', s).replace('\n', '').strip()
-
-
-def _get_interpreter():
-    """ Get iPython interpreter.
-
-    If it has been previously initialized, return it. Otherwise, start it.
-
-    Further work: implement some mechanism to get an interpreter configured
-    with some virtual environment or kernel.
-
-    Returns
-    -------
-    callable
-        iPython interpreter.
-    """
-    if not globals()['IPYTHON_INTERPRETER']:
-        globals()['IPYTHON_INTERPRETER'] = get_ipython()
-
-    return IPYTHON_INTERPRETER
-
-
-def _run_cell(cmd):
-    """ Execute some code using iPython interpreter.
-
-    Parameters
-    ----------
-    cmd: str
-        Code to execute.
-
-    Returns
-    -------
-    str
-        Cleaned code execution output.
-    """
-    with capture_output() as io:
-        _get_interpreter().run_cell(cmd)
-    res_out = io.stdout
-    return _clean_output(res_out)
-
-
 def _evaluate_output(output):
     """ Evaluate output string.
 
@@ -212,23 +150,13 @@ def _evaluate_output(output):
         Casted output.
     """
     logger.debug("Evaluating output: %s" % output)
-    # filter ansi characters
-    ansi_escape = re.compile(r'''
-                \x1B    # ESC
-                [@-_]   # 7-bit C1 Fe
-                [0-?]*  # Parameter bytes
-                [ -/]*  # Intermediate bytes
-                [@-~]   # Final byte
-            ''', re.VERBOSE)
-    output_utf = ansi_escape.sub('', output)
-    logger.debug("Filtered output: '%s'" % output_utf)
     try:
-        return eval(output_utf.strip().lower().capitalize())
+        return eval(output.strip().lower().capitalize())
     except Exception as ex:
         logger.error(
             "Received string '{}' (lenght: {}) is not a binary output. Please "
             "check all assert cells return True or False"
-            .format(output_utf, len(output_utf))
+            .format(output, len(output))
         )
         raise ex
 
@@ -241,7 +169,7 @@ def _evaluate_results(results):
     Parameters
     ----------
     results: list(bool)
-        List of all assertion execution results.
+        List with the assertion results.
 
     Returns
     -------
@@ -273,8 +201,14 @@ def _execute_test(f):
     test_results = []
 
     try:
-        # load f as a dict
+        # load f as notebook node
         notebook = _load_notebook(f)
+
+        # execute notebook inplace
+        ep = ExecutePreprocessor(timeout=600)
+        logger.debug('Executing notebook: \n%s' % f)
+        ep.preprocess(notebook)
+
         # find starting cell index
         assert_cell_index = _get_assert_cell_index(notebook['cells'])
         logger.debug('Assert cell found at %s' % assert_cell_index)
@@ -282,11 +216,8 @@ def _execute_test(f):
         # execute all tests
         for test_cell in notebook['cells'][assert_cell_index + 1:]:
             if is_code(test_cell):
-                code = get_code(test_cell)
-                logger.debug('Executing code:\n%s' % code)
-                res = _evaluate_output(_run_cell(code))
-                logger.debug('Result:\n%s' % res)
-                test_results.append(res)
+                res = get_output(test_cell)
+                test_results.append(_evaluate_output(res))
 
     except Exception as ex:
         logger.error('Error executing notebook %s' % f)

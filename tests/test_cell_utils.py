@@ -27,13 +27,13 @@ def test_not_assert_is_cell():
 
 
 def test_is_assert():
-    cell1 = {'cell_type': 'whatever', 'source': ['# asserts']}
-    cell2 = {'cell_type': 'whatever', 'source': ['# AssertS']}
-    cell3 = {'cell_type': 'whatever', 'source': ['--_-# assertsaaaA']}
-    cell4 = {'cell_type': 'whatever', 'source': ['--_-# AsSErtsaaaA']}
-    cell5 = {'cell_type': 'whatever', 'source': ['# ', '# asserts']}
-    cell6 = {'cell_type': 'whatever', 'source': ['']}
-    cell7 = {'cell_type': 'whatever', 'source': []}
+    cell1 = {'cell_type': 'whatever', 'source': '# asserts'}
+    cell2 = {'cell_type': 'whatever', 'source': '# AssertS'}
+    cell3 = {'cell_type': 'whatever', 'source': '--_-# assertsaaaA'}
+    cell4 = {'cell_type': 'whatever', 'source': '--_-# AsSErtsaaaA'}
+    cell5 = {'cell_type': 'whatever', 'source': '# '}
+    cell6 = {'cell_type': 'whatever', 'source': ''}
+    cell7 = {'cell_type': 'whatever', 'source': 'gsfdgsa'}
 
     assert is_assert(cell1) is True
     assert is_assert(cell2) is True
@@ -104,7 +104,27 @@ def test_get_first_line():
     assert get_first_line(cell) == 'whatever'
 
 
-def test_get_code():
-    cell = {'cell_type': 'code', 'source': ['whatever', 'no']}
+def test_get_output():
+    cell1 = {
+        'cell_type': 'code',
+        'execution_count': 3,
+        'metadata': {},
+        'outputs': [
+            {'data': {'text/plain': 'True'},
+            'execution_count': 3,
+            'metadata': {},
+            'output_type': 'execute_result'}
+            ],
+        'source': ['True == True']
+        }
 
-    assert get_code(cell) == 'whateverno'
+    cell2 = {
+        'cell_type': 'code',
+        'execution_count': 3,
+        'metadata': {},
+        'outputs': [],
+        'source': ['True == True']
+        }
+
+    assert get_output(cell1) == 'True'
+    assert get_output(cell2) == 'False'
