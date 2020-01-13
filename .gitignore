@@ -225,3 +225,6 @@ pip-selfcheck.json
 # Temporal folders
 coverage-reports/
 tmp/
+
+# Notebooks
+.ipynb_checkpoints

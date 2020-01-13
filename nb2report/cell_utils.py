@@ -21,10 +21,7 @@ def assert_cell(cell):
     bool
         True if fits into the ipython notebook cell structure.
     """
-    _is_cell =\
-        isinstance(cell, dict)\
-        and 'cell_type' in cell and isinstance(cell['cell_type'], str)\
-        and 'source' in cell and isinstance(cell['source'], list)
+    _is_cell = 'cell_type' in cell and isinstance(cell['cell_type'], str)
 
     if not _is_cell:
         raise AssertionError('Wrong cell format.'
@@ -53,7 +50,7 @@ def is_assert(cell):
         True it is an assert cell. False otherwise.
     """
     try:
-        return assert_cell(cell) and '# asserts' in cell['source'][0].lower()
+        return assert_cell(cell) and '# asserts' in cell['source'].lower()
     except IndexError:
         return False
 
@@ -155,18 +152,20 @@ def get_first_line(cell):
         raise IndexError('Cell source is empty. %s' % e)
 
 
-def get_code(cell):
-    """ Get all the code from the source field.
+def get_output(cell):
+    """ Get the plain text output from the source field.
 
     Parameters
     ----------
-    cell: dict
-        iPython notebook cell representation.
+    cell: NotebookNode
+        A json-like object representing a notebook cell.
 
     Returns
     -------
     str
-        All the code from the source field.
+        Output from the source field.
     """
-    if is_code(cell):
-        return ''.join(cell['source'])
+    if is_code(cell) and cell['outputs']:
+        return cell['outputs'][0]['data'].get('text/plain', 'False')
+    else:
+        return 'False'

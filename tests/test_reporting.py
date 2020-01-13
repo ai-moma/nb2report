@@ -1,5 +1,6 @@
 import pytest
 import os
+import nbformat
 
 from pathlib import Path
 from nb2report import reporting
@@ -54,7 +55,7 @@ def test__add_report():
 def test__load_notebook():
     # schema file is not an output notebook but it is a notebook
     # it should read it anyway
-    assert isinstance(reporting._load_notebook(EMPTY_NOTEBOOK), dict)
+    assert isinstance(reporting._load_notebook(EMPTY_NOTEBOOK), nbformat.notebooknode.NotebookNode)
 
 
 def test__get_assert_cell_index():
@@ -71,10 +72,9 @@ def test__get_assert_cell_index():
         {
             "cell_type": "markdown",
             "metadata": {},
-            "source": ["# Asserts\n",
-                       "\n",
+            "source": "# Asserts\n"
+                       "\n"
                        "Note: automatic tests will check all asserts to be true"
-                       ]
         }
     ]
 
@@ -93,28 +93,6 @@ def test__get_assert_cell_index_empty_cell():
     ]
 
     reporting._get_assert_cell_index(cells)
-
-
-def test__clean_output():
-    assert reporting._clean_output("Out[1]: True\n") == "True"
-    assert reporting._clean_output("Out[1123]: hola") == "hola"
-    assert reporting._clean_output("OuT[9874]:     True") == "True"
-    assert reporting._clean_output("HolaQueTal[0546]:    True\n") == "True"
-
-
-def test__get_interpreter():
-    reporting.IPYTHON_INTERPRETER = None
-    assert reporting.IPYTHON_INTERPRETER is None
-
-    reporting._get_interpreter()
-    assert reporting.IPYTHON_INTERPRETER
-
-
-def test__run_cell():
-    assert reporting._run_cell("print('HOLA')") == 'HOLA'
-    assert reporting._run_cell("") == ''
-    assert reporting._run_cell("1 < 2") == 'True'
-    assert reporting._run_cell("1 > 2") == 'False'
 
 
 def test__evaluate_output():
